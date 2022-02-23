@@ -34,6 +34,6 @@ contract("NFT deployment", () => {
 
     it("Should check for contract's ownership!", async function () {
       console.log(await nft.owner());
-      expect(await nft.owner()).to.equal("0xAEf179d178C1A8AdF00DE27c253a9A535d117B52");
+      expect(await nft.owner()).to.equal("");
     });
 })
