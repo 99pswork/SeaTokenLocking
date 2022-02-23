@@ -43,5 +43,19 @@ contract BeesNFT is ERC721, Ownable, ReentrancyGuard {
         preSaleTotal = _preSaleTotal;
     }
 
+    function preSaleMint(uint256 _amount) external payable nonReentrant{
+        require(preSaleActive, "NFT-Bees Pre Sale is not Active");
+        require(isWhiteListed[msg.sender], "NFT-Bees Message Sender is not whitelisted");
+        mint(_amount, true);
+    }
+
+    function publicSaleMint(uint256 _amount) external payable nonReentrant {
+
+    }
+
+    function mint(uint256 amount,bool state) internal {
+        
+    }
+
 
 }
