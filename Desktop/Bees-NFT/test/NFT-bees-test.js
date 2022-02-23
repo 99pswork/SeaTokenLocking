@@ -6,7 +6,7 @@ describe("NFT", function () {
 
   before(async() =>{
     const NFT = await ethers.getContractFactory("NFT");
-    nft = await NFT.deploy("Funky Salamanders", "FUNKY SALAMANDERS", 15, 5, 2, 4, "50000000000000000", "50000000000000000",100);
+    nft = await NFT.deploy("");
     await nft.deployed();
 
 
