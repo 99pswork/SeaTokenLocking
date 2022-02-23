@@ -8,7 +8,7 @@
   
   // require('hardhat-spdx-license-identifier');
   // require("hardhat-gas-reporter");
-  const CONFIG = require("../NFT/scripts/credentials.json");
+  const CONFIG = require("../BEES-NFT/scripts/credentials.json");
   
   module.exports = {
       solidity: {
