@@ -1,1 +1,1 @@
-Funky Salamanders NFT ERC721A
+Bees Hot Pot NFT ERC721A
