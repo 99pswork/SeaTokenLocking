@@ -2,6 +2,7 @@ import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
 // SPDX-License-Identifier: MIT
 
@@ -16,7 +17,7 @@ pragma solidity ^0.8.4;
 // 5% of minting profits divided between 80 rare NFT holders 
 // 5% of minting profits divided between 8 ultra-rare holders.
 
-contract BeesNFT is ERC721, Ownable, ReentrancyGuard {
+contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
 
     using SafeMath for uint256;
     using Strings for uint256;
@@ -32,8 +33,10 @@ contract BeesNFT is ERC721, Ownable, ReentrancyGuard {
     uint256 public publicSalePrice; // 0.2ETH
     uint256 public preSaleTotal; // 880 
 
-    uint public maxPreSale;
-    uint public maxPublicSale;
+    uint public maxPreSale; // 1
+    uint public maxPublicSale; // 5
+
+    string private _baseURIextended;
 
     mapping(address => bool) isWhiteListed; 
 
@@ -48,16 +51,55 @@ contract BeesNFT is ERC721, Ownable, ReentrancyGuard {
     function preSaleMint(uint256 _amount) external payable nonReentrant{
         require(preSaleActive, "NFT-Bees Pre Sale is not Active");
         require(isWhiteListed[msg.sender], "NFT-Bees Message Sender is not whitelisted");
+        require(balanceOf(msg.sender).add(_amount) < maxPreSale, "NFT-Bees Max Pre Sale Mint Reached");
         mint(_amount, true);
     }
 
     function publicSaleMint(uint256 _amount) external payable nonReentrant {
-
+        require(publicSaleActive, "NFT-Bees Public Sale is not Active");
+        require(balanceOf(msg.sender).add(_amount) < maxPublicSale, "NFT-Bees Max Public Sale Mint Reached");
+        mint(_amount, false);
     }
 
     function mint(uint256 amount,bool state) internal {
-        
+        require(!paused, "NFT-Bees Minting is Paused");
+        require(totalSupply().add(amount) < maxSupply, "NFT-Bees Max Minting Reached");
+        if(state){
+            require(preSalePrice*amount <= msg.value, "NFT-Bees ETH Value Sent for Pre Sale is not enough");
+        }
+        else{
+            require(publicSalePrice*amount <= msg.value, "NFT-Bees ETH Value Sent for Public Sale is not enough");
+        }
+        uint mintIndex = totalSupply();
+        for(uint ind = 1;ind<=amount;ind++){
+            _safeMint(msg.sender, mintIndex.add(ind));
+        }
     }
 
+    function _baseURI() internal view virtual override returns (string memory){
+        return _baseURIextended;
+    }
+
+    function setBaseURI(string calldata baseURI_) external onlyOwner {
+        _baseURIextended = baseURI_;
+    }
+
+    function addWhiteListAddress(address[] memory _address) external onlyOwner {
+        for (uint i=0; i<_address.length; i++){
+            isWhiteListed[_address[i]] = true;
+        }
+    }
+
+    function togglePauseState() external onlyOwner {
+        paused = !paused;
+    }
+
+    function togglePreSale() external onlyOwner {
+        preSaleActive = !preSaleActive;
+    }
+
+    function togglePublicSale() external onlyOwner {
+        publicSaleActive = !publicSaleActive;
+    }
 
 }
