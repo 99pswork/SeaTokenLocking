@@ -131,6 +131,7 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
         revealed = true;
     }
 
+    // Need to take care of Honey Pot Withdraw (40%, 5%, 5%)
     function withdraw() external onlyOwner {
         uint balance = address(this).balance;
         payable(msg.sender).transfer(balance);
@@ -148,8 +149,8 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
         charityBeesAddress = _address;
     }
 
+    // Need to make sure that the 25% transaction is not affected because of donate.
     function donate3ETH() internal {
         payable(charityBeesAddress).transfer(donationAmount);
     }
-
 }
