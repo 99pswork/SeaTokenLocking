@@ -25,8 +25,9 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     bool public preSaleActive = false;
     bool public publicSaleActive = false;
 
-    bool public paused;
-    bool public revealed;
+    bool public paused = true;
+    bool public revealed = false;
+    bool public withdrawHoneyAllowed = false;
 
     uint256 public maxSupply; // 8888
     uint256 public preSalePrice; // 0.15ETH
@@ -38,15 +39,15 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     uint public maxPreSale; // 1
     uint public maxPublicSale; // 5
 
-    uint public startLegend = 1; //1
-    uint public endLegend = 8; //8
-    uint public startRare = 9; // 9
-    uint public endRare = 88; // 88
+    uint private startLegend = 1; //1
+    uint private endLegend = 8; //8
+    uint private startRare = 9; // 9
+    uint private endRare = 88; // 88
 
     string private _baseURIextended;
     
     string public NETWORK_PROVENANCE = "";
-    string public notRevealerUri;
+    string public notRevealedUri;
 
     uint256 public donationAmount; // 3 ETH
     address public charityBeesAddress; // Set Address
@@ -127,7 +128,7 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
         publicSalePrice = _publicSalePrice;
     }
 
-    function setHoneyBalance() external onlyOwner {
+    function setHoneyPotBalance() external onlyOwner {
         storeRevealBalance = address(this).balance;
     }
 
@@ -137,17 +138,32 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
             _safeMint(_address[i], totalSupply().add(i));
         }
     }
-
+    
+    // Automatically Honey Pot Withdraw allowed after reveal
     function reveal() external onlyOwner {
         revealed = true;
+        withdrawHoneyAllowed = true;
         storeRevealBalance = address(this).balance;
     }
 
+    function toggleWithdrawHoneyPot() external onlyOwner {
+        withdrawHoneyAllowed = !withdrawHoneyAllowed;
+    }
+
     // Need to take care of Honey Pot Withdraw (40%, 5%, 5%)
-    function withdraw() external onlyOwner {
+    // Should owner has only access to 50% of funds? 
+    function withdrawTotal() external onlyOwner {
         uint balance = address(this).balance;
         payable(msg.sender).transfer(balance);
+        storeRevealBalance = 0;
     }
+
+    function ownerHoneyWithdraw() external onlyOwner {
+        require(withdrawHoneyAllowed, "NFT-Bees: Withdraw Honey Pot Not Allowed Yet!");
+        require(storeRevealBalance!=0, "NFT-Bees: Honey Pot Over");
+        payable(msg.sender).transfer(storeRevealBalance/2);
+    }
+
 
     function isLegendary(uint _tokenId) public view returns (bool) {
         if(_tokenId <= endLegend && _tokenId >= startLegend)
@@ -166,17 +182,19 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     }
 
     function withdrawHoneyPot(uint _tokenId) external nonReentrant {
+        require(storeRevealBalance!=0, "NFT-Bees: Honey Pot Over");
+        require(withdrawHoneyAllowed, "NFT-Bees: Withdraw Honey Pot Not Allowed Yet!");
         require(msg.sender == ownerOf(_tokenId), "NFT-Bees: You are not the owner of this token");
         require(amountClaimed[_tokenId] == false, "NFT-Bees: Honey Pot Already Claimed");
-        // 5%
+        // 5% Among Legendary NFT Holders
         if(isLegendary(_tokenId)){
             payable(msg.sender).transfer(storeRevealBalance*5/(100*8));
         }
-        // 5%
+        // 5% Among Rare NFT Holders
         else if(isRare(_tokenId)){
             payable(msg.sender).transfer(storeRevealBalance*5/(100*80));
         }
-        // 40%
+        // 40% Among Common NFT Holders
         else {
             payable(msg.sender).transfer(storeRevealBalance*40/(100*8000));
         }
@@ -189,15 +207,25 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     }
 
     function setNotRevealedURI(string memory _notRevealedUri) external onlyOwner {
-        notRevealerUri = _notRevealedUri;
+        notRevealedUri = _notRevealedUri;
     }
 
     function setCharityAddress(address _address) external onlyOwner {
         charityBeesAddress = _address;
     }
 
-    // Need to make sure that the 25% transaction is not affected because of donate.
+    // Need to make sure that the 25th% transaction is not affected because of donate.
     function donate3ETH() internal {
         payable(charityBeesAddress).transfer(donationAmount);
+    }
+
+    function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
+        require(_exists(_tokenId), "NFT-Bees URI For Token Non-existent");
+        if(!revealed){
+            return notRevealedUri;
+        }
+        string memory currentBaseURI = _baseURI(); 
+        return bytes(currentBaseURI).length > 0 ? 
+        string(abi.encodePacked(currentBaseURI,_tokenId.toString(),".json")) : "";
     }
 }
