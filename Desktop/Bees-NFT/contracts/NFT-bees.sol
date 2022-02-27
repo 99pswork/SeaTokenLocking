@@ -39,8 +39,8 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     uint public maxPreSale; // 1
     uint public maxPublicSale; // 5
 
-    uint private startLegend = 1; //1
-    uint private endLegend = 8; //8
+    uint private startLegend = 1; // 1
+    uint private endLegend = 8; // 8
     uint private startRare = 9; // 9
     uint private endRare = 88; // 88
 
@@ -69,6 +69,7 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
         require(isWhiteListed[msg.sender], "NFT-Bees Message Sender is not whitelisted");
         require(currentPreSale <= preSaleTotal, "NFT-Bees Pre Sale Max Limit Reached");
         require(balanceOf(msg.sender).add(_amount) <= maxPreSale, "NFT-Bees Max Pre Sale Mint Reached");
+        currentPreSale += _amount;
         mint(_amount, true);
     }
 
@@ -238,7 +239,9 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     }
 
     // Need to make sure that the 25th% transaction is not affected because of donate.
-    function donate3ETH() internal {
+    function donateETH() external onlyOwner {
+        require(charityBeesAddress != address(0), "NFT-Bees Address cannot be zero");
+        require(donationAmount != 0, "NFT-Bees Donation Amount cannot be zero");
         payable(charityBeesAddress).transfer(donationAmount);
     }
 
