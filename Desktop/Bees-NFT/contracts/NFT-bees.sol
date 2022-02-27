@@ -52,30 +52,29 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     uint256 public donationAmount; // 3 ETH
     address public charityBeesAddress; // Set Address
 
-    mapping(address => bool) isWhiteListed; 
-    mapping(uint => bool) amountClaimed;
+    mapping(address => bool) public isWhiteListed; 
+    mapping(uint => bool) public amountClaimed;
 
-    constructor(string memory name, string memory symbol, uint256 _preSalePrice, uint256 _publicSalePrice, uint256 _maxPreSale, uint256 _maxPublicSale, uint256 _preSaleTotal, uint256 _donationAmount, address _charityBeesAddress) ERC721(name, symbol) ReentrancyGuard() {
+    constructor(string memory name, string memory symbol, uint256 _preSalePrice, uint256 _publicSalePrice, uint256 _maxPreSale, uint256 _maxPublicSale, uint256 _preSaleTotal, uint256 _maxSupply) ERC721(name, symbol) ReentrancyGuard() {
         preSalePrice = _preSalePrice;
         publicSalePrice = _publicSalePrice;
         maxPreSale = _maxPreSale;
         maxPublicSale = _maxPublicSale;
         preSaleTotal = _preSaleTotal;
-        donationAmount = _donationAmount;
-        charityBeesAddress = _charityBeesAddress;
+        maxSupply = _maxSupply;
     }
 
     function preSaleMint(uint256 _amount) external payable nonReentrant{
         require(preSaleActive, "NFT-Bees Pre Sale is not Active");
         require(isWhiteListed[msg.sender], "NFT-Bees Message Sender is not whitelisted");
         require(currentPreSale <= preSaleTotal, "NFT-Bees Pre Sale Max Limit Reached");
-        require(balanceOf(msg.sender).add(_amount) < maxPreSale, "NFT-Bees Max Pre Sale Mint Reached");
+        require(balanceOf(msg.sender).add(_amount) <= maxPreSale, "NFT-Bees Max Pre Sale Mint Reached");
         mint(_amount, true);
     }
 
     function publicSaleMint(uint256 _amount) external payable nonReentrant {
         require(publicSaleActive, "NFT-Bees Public Sale is not Active");
-        require(balanceOf(msg.sender).add(_amount) < maxPublicSale, "NFT-Bees Max Public Sale Mint Reached");
+        require(balanceOf(msg.sender).add(_amount) <= maxPublicSale, "NFT-Bees Max Public Sale Mint Reached");
         mint(_amount, false);
     }
 
@@ -133,12 +132,13 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     }
 
     function airDrop(address[] memory _address) external onlyOwner {
+        uint256 mintIndex = totalSupply();
         require(totalSupply().add(_address.length) <= maxSupply, "NFT-Bees Maximum Supply Reached");
         for(uint i=1; i <= _address.length; i++){
-            _safeMint(_address[i], totalSupply().add(i));
+            _safeMint(_address[i-1], mintIndex.add(i));
         }
     }
-    
+
     // Automatically Honey Pot Withdraw allowed after reveal
     function reveal() external onlyOwner {
         revealed = true;
@@ -182,10 +182,10 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     }
 
     function withdrawHoneyPot(uint _tokenId) external nonReentrant {
-        require(storeRevealBalance!=0, "NFT-Bees: Honey Pot Over");
         require(withdrawHoneyAllowed, "NFT-Bees: Withdraw Honey Pot Not Allowed Yet!");
         require(msg.sender == ownerOf(_tokenId), "NFT-Bees: You are not the owner of this token");
         require(amountClaimed[_tokenId] == false, "NFT-Bees: Honey Pot Already Claimed");
+        require(storeRevealBalance!=0, "NFT-Bees: Honey Pot Over");
         // 5% Among Legendary NFT Holders
         if(isLegendary(_tokenId)){
             payable(msg.sender).transfer(storeRevealBalance*5/(100*8));
@@ -201,6 +201,25 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
         amountClaimed[_tokenId] = true;
     }
 
+    function checkHoneyPot(uint _tokenId) view external returns (uint256) {
+        require(withdrawHoneyAllowed, "NFT-Bees: Withdraw Honey Pot Not Allowed Yet!");
+        require(msg.sender == ownerOf(_tokenId), "NFT-Bees: You are not the owner of this token");
+        require(amountClaimed[_tokenId] == false, "NFT-Bees: Honey Pot Already Claimed");
+        require(storeRevealBalance!=0, "NFT-Bees: Honey Pot Over");
+        // 5% Among Legendary NFT Holders
+        if(isLegendary(_tokenId)){
+            return storeRevealBalance*5/(100*8);
+        }
+        // 5% Among Rare NFT Holders
+        else if(isRare(_tokenId)){
+            return storeRevealBalance*5/(100*80);
+        }
+        // 40% Among Common NFT Holders
+        else {
+            return storeRevealBalance*40/(100*8000);
+        }
+    }
+
 
     function setProvenanceHash(string memory provenanceHash) external onlyOwner {
         NETWORK_PROVENANCE = provenanceHash;
@@ -212,6 +231,10 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
 
     function setCharityAddress(address _address) external onlyOwner {
         charityBeesAddress = _address;
+    }
+
+    function setDonationAmount(uint256 _donationAmount) external onlyOwner {
+        donationAmount = _donationAmount;
     }
 
     // Need to make sure that the 25th% transaction is not affected because of donate.
