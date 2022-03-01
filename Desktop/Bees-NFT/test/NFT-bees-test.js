@@ -131,7 +131,7 @@ describe("NFT", function () {
     //     expect(await nft.isLegendary(0)).to.equal(false);
     // })
 
-    it('Try Withdraw', async function() {
+    it('Try Honey Pot Withdraw', async function() {
         balance1 = await web3.eth.getBalance(accounts[1].address);
 
         await expect(nft.connect(accounts[1]).withdrawHoneyPot(1))
