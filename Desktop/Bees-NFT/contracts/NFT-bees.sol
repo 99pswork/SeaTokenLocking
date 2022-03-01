@@ -205,7 +205,6 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     }
 
     function checkHoneyPot(uint _tokenId, address _address) public view returns (uint256) {
-        require(withdrawHoneyAllowed, "NFT-Bees: Withdraw Honey Pot Not Allowed Yet!");
         require(_address == ownerOf(_tokenId), "NFT-Bees: You are not the owner of this token");
         require(amountClaimed[_tokenId] == false, "NFT-Bees: Honey Pot Already Claimed");
         require(storeRevealBalance!=0, "NFT-Bees: Honey Pot Over");
