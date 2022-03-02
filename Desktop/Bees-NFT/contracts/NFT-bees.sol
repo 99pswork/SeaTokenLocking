@@ -29,10 +29,10 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     bool public revealed = false;
     bool public withdrawHoneyAllowed = false;
 
-    uint256 public maxSupply; // 8888
+    uint256 public maxSupply; // 8808
     uint256 public preSalePrice; // 0.15ETH
     uint256 public publicSalePrice; // 0.2ETH
-    uint256 public preSaleTotal; // 880 
+    uint256 public preSaleTotal; // 888 
     uint256 public currentPreSale;
     uint256 public storeRevealBalance; 
 
@@ -42,7 +42,7 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     uint private startLegend = 1; // 1
     uint private endLegend = 8; // 8
     uint private startRare = 9; // 9
-    uint private endRare = 88; // 88
+    uint private endRare = 808; // 88
 
     string private _baseURIextended;
     
@@ -51,6 +51,8 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
 
     uint256 public donationAmount; // 3 ETH
     address public charityBeesAddress; // Set Address
+
+    uint256 public amountDonatedSoFar;
 
     mapping(address => bool) public isWhiteListed; 
     mapping(uint => bool) public amountClaimed;
@@ -184,42 +186,39 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
         return false;
     }
 
+    // 45 For Rare & 5% for Legendary
     function withdrawHoneyPot(uint _tokenId) external nonReentrant {
         require(withdrawHoneyAllowed, "NFT-Bees: Withdraw Honey Pot Not Allowed Yet!");
         require(msg.sender == ownerOf(_tokenId), "NFT-Bees: You are not the owner of this token");
         require(amountClaimed[_tokenId] == false, "NFT-Bees: Honey Pot Already Claimed");
         require(storeRevealBalance!=0, "NFT-Bees: Honey Pot Over");
+        require(isLegendary(_tokenId) || isRare(_tokenId), "NFT-Bees: Your NFT not eligible for Honey Pot");
         // 5% Among Legendary NFT Holders
         if(isLegendary(_tokenId)){
             payable(msg.sender).transfer(storeRevealBalance*5/(100*8));
         }
-        // 5% Among Rare NFT Holders
+        // 45% Among Rare NFT Holders
         else if(isRare(_tokenId)){
-            payable(msg.sender).transfer(storeRevealBalance*5/(100*80));
-        }
-        // 40% Among Common NFT Holders
-        else {
-            payable(msg.sender).transfer(storeRevealBalance*40/(100*8000));
+            payable(msg.sender).transfer(storeRevealBalance*45/(100*800));
         }
         amountClaimed[_tokenId] = true;
     }
 
+    // 45 For Rare & 5% for Legendary
     function checkHoneyPot(uint _tokenId, address _address) public view returns (uint256) {
         require(_address == ownerOf(_tokenId), "NFT-Bees: You are not the owner of this token");
         require(amountClaimed[_tokenId] == false, "NFT-Bees: Honey Pot Already Claimed");
         require(storeRevealBalance!=0, "NFT-Bees: Honey Pot Over");
+        require(isLegendary(_tokenId) || isRare(_tokenId), "NFT-Bees: Your NFT not eligible for Honey Pot");
         // 5% Among Legendary NFT Holders
         if(isLegendary(_tokenId)){
             return storeRevealBalance*5/(100*8);
         }
-        // 5% Among Rare NFT Holders
+        // 45% Among Rare NFT Holders
         else if(isRare(_tokenId)){
-            return storeRevealBalance*5/(100*80);
+            return storeRevealBalance*45/(100*800);
         }
-        // 40% Among Common NFT Holders
-        else {
-            return storeRevealBalance*40/(100*8000);
-        }
+        return 0;
     }
 
 
@@ -244,6 +243,7 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
         require(charityBeesAddress != address(0), "NFT-Bees Address cannot be zero");
         require(donationAmount != 0, "NFT-Bees Donation Amount cannot be zero");
         payable(charityBeesAddress).transfer(donationAmount);
+        amountDonatedSoFar += donationAmount;
     }
 
     function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
