@@ -42,7 +42,7 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     uint private startLegend = 1; // 1
     uint private endLegend = 8; // 8
     uint private startRare = 9; // 9
-    uint private endRare = 808; // 88
+    uint private endRare = 888; // 88
 
     string private _baseURIextended;
     
@@ -50,9 +50,10 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     string public notRevealedUri;
 
     uint256 public donationAmount; // 3 ETH
-    address public charityBeesAddress; // Set Address
+    address public charityBeesAddress; // Set Donation Address
 
     uint256 public amountDonatedSoFar;
+    uint256 public raffleReward = 1000000000000000000; // 1 ETH
 
     mapping(address => bool) public isWhiteListed; 
     mapping(uint => bool) public amountClaimed;
@@ -199,7 +200,7 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
         }
         // 45% Among Rare NFT Holders
         else if(isRare(_tokenId)){
-            payable(msg.sender).transfer(storeRevealBalance*45/(100*800));
+            payable(msg.sender).transfer(storeRevealBalance*45/(100*880));
         }
         amountClaimed[_tokenId] = true;
     }
@@ -216,7 +217,7 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
         }
         // 45% Among Rare NFT Holders
         else if(isRare(_tokenId)){
-            return storeRevealBalance*45/(100*800);
+            return storeRevealBalance*45/(100*880);
         }
         return 0;
     }
@@ -244,6 +245,21 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
         require(donationAmount != 0, "NFT-Bees Donation Amount cannot be zero");
         payable(charityBeesAddress).transfer(donationAmount);
         amountDonatedSoFar += donationAmount;
+    }
+
+    function raffleNumberGenerator(uint _limit) public view returns(uint256) {
+    uint256 seed = uint256(keccak256(abi.encodePacked(
+        block.timestamp + block.difficulty + ((uint256(keccak256(abi.encodePacked(block.coinbase)))) / (block.timestamp)) +
+        block.gaslimit + ((uint256(keccak256(abi.encodePacked(msg.sender)))) / (block.timestamp)) + block.number
+    )));
+
+    return 1 + (seed - ((seed / _limit) * _limit));
+    
+    }
+
+    function sendRaffleReward(address _address) external onlyOwner {
+        require(_address != address(0), "NFT-Bees Address cannot be zero");
+        payable(_address).transfer(raffleReward);
     }
 
     function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {

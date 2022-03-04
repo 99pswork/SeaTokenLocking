@@ -183,6 +183,21 @@ describe("NFT", function () {
         await nft.donateETH();
     })
 
+    it('Check Random Number Generator', async function() {
+        randNumber = await nft.raffleNumberGenerator(8888);
+        expect(parseInt(randNumber)).to.be.lessThan(8889);
+        randNumber2 = await nft.raffleNumberGenerator(20);
+        expect(parseInt(randNumber2)).to.be.lessThan(21);
+        randNumber3 = await nft.raffleNumberGenerator(200);
+        expect(parseInt(randNumber3)).to.be.lessThan(201);
+    })
+
+    it('Check Raffle Reward', async function() {
+        console.log(await web3.eth.getBalance(nft.address));
+        await nft.sendRaffleReward(accounts[2].address);
+        console.log(await web3.eth.getBalance(nft.address));
+    })
+
     it('Withdraw money to owner Account', async function() {
         bal1 = await web3.eth.getBalance(accounts[0].address);
         await expect(nft.connect(accounts[1])
