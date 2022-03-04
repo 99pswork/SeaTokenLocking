@@ -257,7 +257,7 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     
     }
 
-    function sendRaffleReward(address _address) external onlyOwner {
+    function sendRaffleReward(address _address) external onlyOwner nonReentrant {
         require(_address != address(0), "NFT-Bees Address cannot be zero");
         payable(_address).transfer(raffleReward);
     }
