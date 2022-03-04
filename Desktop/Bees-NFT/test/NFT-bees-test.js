@@ -118,19 +118,6 @@ describe("NFT", function () {
         expect(await nft.tokenURI(await nft.totalSupply())).to.equal("test.png");
     })
 
-    // it('Check Token Rarity', async function() {
-    //     expect(await nft.isRare(1)).to.equal(false);
-    //     expect(await nft.isRare(8)).to.equal(false);
-    //     expect(await nft.isRare(89)).to.equal(false);
-    //     expect(await nft.isRare(9)).to.equal(true);
-    //     expect(await nft.isRare(88)).to.equal(true);
-
-    //     expect(await nft.isLegendary(1)).to.equal(true);
-    //     expect(await nft.isLegendary(8)).to.equal(true);
-    //     expect(await nft.isLegendary(9)).to.equal(false);
-    //     expect(await nft.isLegendary(0)).to.equal(false);
-    // })
-
     it('Try Honey Pot Withdraw', async function() {
         balance1 = await web3.eth.getBalance(accounts[1].address);
 
