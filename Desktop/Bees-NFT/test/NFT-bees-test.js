@@ -180,9 +180,11 @@ describe("NFT", function () {
     })
 
     it('Check Raffle Reward', async function() {
-        console.log(await web3.eth.getBalance(nft.address));
+        bal1 = await web3.eth.getBalance(nft.address);
+        await nft.setRaffleReward("100000000000000000");
         await nft.sendRaffleReward(accounts[2].address);
-        console.log(await web3.eth.getBalance(nft.address));
+        bal2 = await web3.eth.getBalance(nft.address);
+        expect(bal1-bal2).equals(100000000000000000);
     })
 
     it('Withdraw money to owner Account', async function() {

@@ -8,6 +8,9 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
 pragma solidity ^0.8.4;
 
+// Point to remember that airdrop is counted as mint.
+// Owner honey pot withdraw multiple times (Is there need to restrict which is 50%)
+
 // NFT Count 8888
 // White list - 888,  @0.15 ETH, Max 1 Per Pax
 // Public Sale - 8000, @0.2 ETH, Max 5 Per Pax
@@ -135,6 +138,10 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
         storeRevealBalance = address(this).balance;
     }
 
+    function setRaffleReward(uint256 _reward) onlyOwner external {
+        raffleReward = _reward;
+    }
+
     function airDrop(address[] memory _address) external onlyOwner {
         uint256 mintIndex = totalSupply();
         require(totalSupply().add(_address.length) <= maxSupply, "NFT-Bees Maximum Supply Reached");
@@ -209,8 +216,8 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     function checkHoneyPot(uint _tokenId, address _address) public view returns (uint256) {
         require(_address == ownerOf(_tokenId), "NFT-Bees: You are not the owner of this token");
         require(amountClaimed[_tokenId] == false, "NFT-Bees: Honey Pot Already Claimed");
-        require(storeRevealBalance!=0, "NFT-Bees: Honey Pot Over");
         require(isLegendary(_tokenId) || isRare(_tokenId), "NFT-Bees: Your NFT not eligible for Honey Pot");
+        require(storeRevealBalance!=0, "NFT-Bees: Honey Not Yet Started");
         // 5% Among Legendary NFT Holders
         if(isLegendary(_tokenId)){
             return storeRevealBalance*5/(100*8);
@@ -247,6 +254,7 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
         amountDonatedSoFar += donationAmount;
     }
 
+    // Do you want this to be onlyOwner function ?
     function raffleNumberGenerator(uint _limit) public view returns(uint256) {
     uint256 seed = uint256(keccak256(abi.encodePacked(
         block.timestamp + block.difficulty + ((uint256(keccak256(abi.encodePacked(block.coinbase)))) / (block.timestamp)) +
