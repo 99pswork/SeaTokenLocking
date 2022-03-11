@@ -15,9 +15,8 @@ pragma solidity ^0.8.4;
 // White list - 888,  @0.15 ETH, Max 1 Per Pax
 // Public Sale - 8000, @0.2 ETH, Max 5 Per Pax
 // Every 25%, 3ETH to charity wallet
-// NFT Reaveal Post one week
-// 40% of minting profits divided between 8800 common NFT holders 
-// 5% of minting profits divided between 80 rare NFT holders 
+// NFT Reaveal Post one week 
+// 40% of minting profits divided between 80 rare NFT holders 
 // 5% of minting profits divided between 8 ultra-rare holders.
 
 contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
@@ -32,7 +31,7 @@ contract BeesNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     bool public revealed = false;
     bool public withdrawHoneyAllowed = false;
 
-    uint256 public maxSupply; // 8808
+    uint256 public maxSupply; // 8888
     uint256 public preSalePrice; // 0.15ETH
     uint256 public publicSalePrice; // 0.2ETH
     uint256 public preSaleTotal; // 888 
